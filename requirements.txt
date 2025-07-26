@@ -9,3 +9,4 @@ django-quill-editor==0.1.16
 django-jazzmin==2.4.0
 celery==5.2.7
 redis==3.5.3
+gunicorn

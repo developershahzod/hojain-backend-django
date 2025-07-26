@@ -106,4 +106,88 @@ urlpatterns = [
     # path('student_list/', views.StudentAlllView.as_view()),
     # path('student_add/', views.StudentCreateView.as_view()),
     # path('student_id/<int:pk>/', views.StudentIDView.as_view()),
+    # ============================================================================
+    # BUILDING MATERIALS API ENDPOINTS
+    # ============================================================================
+    
+    # Material Types CRUD
+    path('api/v1/material-types/', views.MaterialTypeListCreateView.as_view(), name='material-types-list-create'),
+    path('api/v1/material-types/<int:pk>/', views.MaterialTypeDetailView.as_view(), name='material-type-detail'),
+    
+    # Material Grades CRUD
+    path('api/v1/material-grades/', views.MaterialGradeListCreateView.as_view(), name='material-grades-list-create'),
+    path('api/v1/material-grades/<int:pk>/', views.MaterialGradeDetailView.as_view(), name='material-grade-detail'),
+    
+    # Technical Standards CRUD
+    path('api/v1/technical-standards/', views.TechnicalStandardListCreateView.as_view(), name='technical-standards-list-create'),
+    path('api/v1/technical-standards/<int:pk>/', views.TechnicalStandardDetailView.as_view(), name='technical-standard-detail'),
+    
+    # Application Areas CRUD
+    path('api/v1/application-areas/', views.ApplicationAreaListCreateView.as_view(), name='application-areas-list-create'),
+    path('api/v1/application-areas/<int:pk>/', views.ApplicationAreaDetailView.as_view(), name='application-area-detail'),
+    
+    # Equipment Types CRUD
+    path('api/v1/equipment-types/', views.EquipmentTypeListCreateView.as_view(), name='equipment-types-list-create'),
+    path('api/v1/equipment-types/<int:pk>/', views.EquipmentTypeDetailView.as_view(), name='equipment-type-detail'),
+    
+    # Units of Measure CRUD
+    path('api/v1/units-of-measure/', views.UnitOfMeasureListCreateView.as_view(), name='units-of-measure-list-create'),
+    path('api/v1/units-of-measure/<int:pk>/', views.UnitOfMeasureDetailView.as_view(), name='unit-of-measure-detail'),
+    
+    # Manufacturers CRUD
+    path('api/v1/manufacturers/', views.ManufacturerListCreateView.as_view(), name='manufacturers-list-create'),
+    path('api/v1/manufacturers/<int:pk>/', views.ManufacturerDetailView.as_view(), name='manufacturer-detail'),
+    
+    # Product Variants CRUD
+    path('api/v1/product-variants/', views.ProductVariantListCreateView.as_view(), name='product-variants-list-create'),
+    path('api/v1/product-variants/<int:pk>/', views.ProductVariantDetailView.as_view(), name='product-variant-detail'),
+    path('api/v1/products/<int:pk>/variants/', views.ProductVariantListView.as_view(), name='product-variants-by-product'),
+    
+    # Enhanced Building Materials Products CRUD
+    path('api/v1/building-materials/', views.BuildingMaterialsProductListCreateView.as_view(), name='building-materials-list-create'),
+    path('api/v1/building-materials/<int:pk>/', views.BuildingMaterialsProductDetailView.as_view(), name='building-material-detail'),
+    
+    # Specialized Product Lists
+    path('api/v1/products/professional/', views.ProfessionalProductsListView.as_view(), name='professional-products'),
+    path('api/v1/products/featured/', views.FeaturedProductsListView.as_view(), name='featured-products'),
+    path('api/v1/products/new-arrivals/', views.NewArrivalsListView.as_view(), name='new-arrivals'),
+    path('api/v1/products/on-sale/', views.OnSaleProductsListView.as_view(), name='on-sale-products'),
+    
+    # Inventory Management
+    path('api/v1/products/low-stock/', views.LowStockProductsListView.as_view(), name='low-stock-products'),
+    path('api/v1/products/out-of-stock/', views.OutOfStockProductsListView.as_view(), name='out-of-stock-products'),
+    
+    # Enhanced filtering by building materials attributes
+    path('api/v1/products/material-type/<int:pk>/', views.ProductsByMaterialTypeView.as_view(), name='products-by-material-type'),
+    path('api/v1/products/equipment-type/<int:pk>/', views.ProductsByEquipmentTypeView.as_view(), name='products-by-equipment-type'),
+    path('api/v1/products/manufacturer/<int:pk>/', views.ProductsByManufacturerView.as_view(), name='products-by-manufacturer'),
+    
+    # Statistics and Reports
+    path('api/v1/stats/products/', views.ProductStatsView.as_view(), name='product-stats'),
+    path('api/v1/reports/inventory/', views.InventoryReportView.as_view(), name='inventory-report'),
+    
+    # Bulk Operations
+    path('api/v1/bulk/update-stock/', views.BulkUpdateStockView.as_view(), name='bulk-update-stock'),
+    path('api/v1/bulk/update-prices/', views.BulkUpdatePricesView.as_view(), name='bulk-update-prices'),
+    
+    # ============================================================================
+    # API v2 - RESTful endpoints with better naming
+    # ============================================================================
+    
+    # Core Resources
+    path('api/v2/categories/', views.CategorytDetailView.as_view(), name='v2-categories'),
+    path('api/v2/brands/', views.BrandDetailView.as_view(), name='v2-brands'),
+    path('api/v2/products/', views.BuildingMaterialsProductListCreateView.as_view(), name='v2-products'),
+    path('api/v2/products/<int:pk>/', views.BuildingMaterialsProductDetailView.as_view(), name='v2-product-detail'),
+    
+    # Orders and Clients
+    path('api/v2/orders/', views.AddOrdersSeralizerCreateView.as_view(), name='v2-orders'),
+    path('api/v2/orders/<int:pk>/', views.OrderEditDetailView.as_view(), name='v2-order-detail'),
+    path('api/v2/clients/', views.AddUserCreateView.as_view(), name='v2-clients'),
+    path('api/v2/clients/<int:pk>/', views.ClientEditDetailView.as_view(), name='v2-client-detail'),
+    
+    # Reviews
+    path('api/v2/reviews/', views.AddReviewSeralizerCreateView.as_view(), name='v2-reviews'),
+    path('api/v2/reviews/<int:pk>/', views.EditReviewSeralizerCreateView.as_view(), name='v2-review-detail'),
+    path('api/v2/products/<int:pk>/reviews/', views.ReviewDetailView.as_view(), name='v2-product-reviews'),
 ]

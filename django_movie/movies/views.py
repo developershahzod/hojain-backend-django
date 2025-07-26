@@ -1,28 +1,31 @@
 from django.db import models
-from rest_framework import generics
-from rest_framework import filters
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+from rest_framework import generics, filters, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from django.http import HttpResponseRedirect
-from django.contrib.auth.models import User
-from rest_framework import permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.shortcuts import get_object_or_404
+from django.db.models import Prefetch, Q, Count, Avg
 import requests
 from django.conf import settings
-
 import json
+import logging
 
-import urllib.parse
-
-from django.shortcuts import get_object_or_404
-
-from rest_framework import viewsets
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 
-from .models import Category,Promo,  NotificationToken, MobileDocuments, Products, Slider,Review, MainPage, New, Clients, Orders, Brand, OrderProduct, Stories
+from .models import (
+    Category, Promo, NotificationToken, MobileDocuments, Products, ProductVariant,
+    Slider, Review, MainPage, New, Clients, Orders, Brand, OrderProduct, Stories,
+    Manufacturer, MaterialType, MaterialGrade, TechnicalStandard, ApplicationArea,
+    EquipmentType, UnitOfMeasure
+)
 
 from .serializers import (
     CategoryDataSerializer,
@@ -43,7 +46,25 @@ from .serializers import (
     MobileDocumentsDataSerializer,
     OrderMobileUserSeralizer,
     NotificationTokenSeralizer,
-    PromoSeralizer
+    PromoSeralizer,
+    # Building Materials Serializers
+    MaterialTypeSerializer,
+    MaterialGradeSerializer,
+    TechnicalStandardSerializer,
+    ApplicationAreaSerializer,
+    EquipmentTypeSerializer,
+    UnitOfMeasureSerializer,
+    ManufacturerSerializer,
+    ProductVariantSerializer,
+    ProductVariantCreateSerializer,
+    BuildingMaterialsProductSerializer,
+    BuildingMaterialsProductCreateSerializer,
+    MaterialTypeListSerializer,
+    EquipmentTypeListSerializer,
+    ManufacturerListSerializer,
+    ProductListSerializer,
+    ProductStatsSerializer,
+    InventoryReportSerializer
 )
 
 
@@ -100,8 +121,20 @@ class EditPromoSeralizerSeralizerCreateView(generics.RetrieveUpdateDestroyAPIVie
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all().select_related('product')
     serializer_class = ReviewAddSeralizer
+    
+    def get_queryset(self):
+        return Review.objects.select_related('product', 'user').filter(is_approved=True)
+    
+    def perform_create(self, serializer):
+        try:
+            serializer.save()
+            # Clear related caches
+            if serializer.instance.product:
+                cache.delete(f'product_reviews_{serializer.instance.product.id}')
+        except Exception as e:
+            logger.error(f"Error creating review: {e}")
+            raise
     
     
 class AddNotificationToket(generics.ListCreateAPIView):
@@ -272,91 +305,97 @@ class OrdersMDetailView(generics.ListAPIView):
 
 
 class AddOrdersSeralizerCreateView(generics.ListCreateAPIView):
-    """Dobativ tip"""
-    queryset = Orders.objects.all()
+    """Optimized order creation view"""
     serializer_class = OrdersSeralizer
     
+    def get_queryset(self):
+        return Orders.objects.select_related('user_id').order_by('-created_at')
+    
     def perform_create(self, serializer):
-        order = serializer.save()
-        
-        # Примерные данные:
-        payment_type = order.payment_type  # 1 = нал, 3 = Payme, 4 = Click
-        order_status = 1  # 1 = ожидание, 2 = оплачено, 3 = ошибка
-        
-        # Тип оплаты
-        if payment_type == 1:
-            payment_text = "наличными, не оплачен"
-        elif payment_type == 3:
-            if order_status == 1:
-                payment_text = "Payme (ожидание оплаты)"
-            elif order_status == 2:
-                payment_text = "Payme (оплачено)"
-            else:
-                payment_text = "Payme (оплата не прошла)"
-        elif payment_type == 4:
-            if order_status == 1:
-                payment_text = "Click (ожидание оплаты)"
-            elif order_status == 2:
-                payment_text = "Click (оплачено)"
-            else:
-                payment_text = "Click (оплата не прошла)"
-                
-        elif payment_type == 5:
-            if order_status == 1:
-                payment_text = "Humo & Uzcard (ожидание оплаты)"
-            elif order_status == 2:
-                payment_text = "Humo & Uzcard (оплачено)"
-            else:
-                payment_text = "Humo & Uzcard (оплата не прошла)"
-        else:
-            payment_text = "Payment Online"
-
-
-        # Здесь формируем текст сообщения
-        message = (
-            f"<b>Новый заказ!</b>\n\n"
-            f"<b>Номер заказа:</b> {order.id}\n"
-            f"<b>Клиент:</b> {order.name} {order.surname}\n"
-            f"<b>Адрес:</b> {order.adress}\n"
-            f"<b>Сумма:</b> {order.all_sum} сум\n"
-            f"<b>Доставка:</b> {order.delivery_sum} сум\n"
-            f"<b>Оплата:</b> {payment_text}\n"
-            f"<b>Дата доставки:</b> {order.delivery_date}\n"
-            f"<b>Телефон:</b> {order.phone}"
-        )
-        
- 
-        
-        
-        order_url = f"http://osmaadmin.academytable.ru/order_product_server/{order.id}/{order.status}/"
-        
-        keyboard = {
-            "inline_keyboard": [
-                [
-                    {
-                        "text": "Открыть заказ",
-                        "url": order_url
-                    }
-                ]
-            ]
-        }
-        
-        # Данные Telegram
-        bot_token = 'bot_token'
-        chat_id = '-chat_id'
-
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            'chat_id': chat_id,
-            'text': message,
-            'parse_mode': 'HTML',
-            "reply_markup": json.dumps(keyboard)
-        }
-
         try:
-            requests.post(url, data=payload)
+            order = serializer.save()
+            
+            # Send notification asynchronously (if Celery is available)
+            self._send_order_notification(order)
+            
+            # Clear related caches
+            if order.user_id:
+                cache.delete(f'user_orders_{order.user_id.id}')
+                
         except Exception as e:
-            print(f"Ошибка при отправке сообщения в Telegram: {e}")
+            logger.error(f"Error creating order: {e}")
+            raise
+    
+    def _get_payment_text(self, payment_type, order_status=1):
+        """Get payment type description"""
+        payment_types = {
+            1: "наличными, не оплачен",
+            3: {
+                1: "Payme (ожидание оплаты)",
+                2: "Payme (оплачено)",
+                3: "Payme (оплата не прошла)"
+            },
+            4: {
+                1: "Click (ожидание оплаты)",
+                2: "Click (оплачено)",
+                3: "Click (оплата не прошла)"
+            },
+            5: {
+                1: "Humo & Uzcard (ожидание оплаты)",
+                2: "Humo & Uzcard (оплачено)",
+                3: "Humo & Uzcard (оплата не прошла)"
+            }
+        }
+        
+        if payment_type == 1:
+            return payment_types[1]
+        elif payment_type in [3, 4, 5]:
+            return payment_types[payment_type].get(order_status, "Payment Online")
+        else:
+            return "Payment Online"
+    
+    def _send_order_notification(self, order):
+        """Send Telegram notification for new order"""
+        try:
+            payment_text = self._get_payment_text(order.payment_type, 1)
+            
+            message = (
+                f"<b>Новый заказ!</b>\n\n"
+                f"<b>Номер заказа:</b> {order.id}\n"
+                f"<b>Клиент:</b> {order.name} {order.surname}\n"
+                f"<b>Адрес:</b> {order.address}\n"
+                f"<b>Сумма:</b> {order.all_sum} сум\n"
+                f"<b>Доставка:</b> {order.delivery_sum} сум\n"
+                f"<b>Оплата:</b> {payment_text}\n"
+                f"<b>Дата доставки:</b> {order.delivery_date}\n"
+                f"<b>Телефон:</b> {order.phone}"
+            )
+            
+            order_url = f"http://osmaadmin.academytable.ru/order_product_server/{order.id}/{order.status}/"
+            
+            keyboard = {
+                "inline_keyboard": [
+                    [{"text": "Открыть заказ", "url": order_url}]
+                ]
+            }
+            
+            # Get from environment variables
+            bot_token = settings.TELEGRAM_BOT_TOKEN if hasattr(settings, 'TELEGRAM_BOT_TOKEN') else 'bot_token'
+            chat_id = settings.TELEGRAM_CHAT_ID if hasattr(settings, 'TELEGRAM_CHAT_ID') else '-chat_id'
+            
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            payload = {
+                'chat_id': chat_id,
+                'text': message,
+                'parse_mode': 'HTML',
+                "reply_markup": json.dumps(keyboard)
+            }
+            
+            # Send notification asynchronously
+            requests.post(url, data=payload, timeout=10)
+            
+        except Exception as e:
+            logger.error(f"Error sending Telegram notification: {e}")
     
 class AddOrderProductSeralizerSeralizerCreateView(generics.ListCreateAPIView):
     """Dobativ tip"""
@@ -489,48 +528,98 @@ class CategorytDetailView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryDataSerializer
     
+@method_decorator(cache_page(60 * 15), name='dispatch')  # Cache for 15 minutes
+@method_decorator(vary_on_headers('User-Agent'), name='dispatch')
 class ProductsDetailView(generics.ListAPIView):
-    """Vvidvod predmetov"""
-    search_fields = ['title_ru', 'title_uz', 'brand__name']
+    """Optimized products list view with caching and query optimization"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng', 'brand__name']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
-    queryset = Products.objects.all()
     serializer_class = ProductsDataSerializer
+    ordering_fields = ['price', 'created_at', 'title_ru']
+    ordering = ['-created_at']
     
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'product_type_id',
+            'material_type_id', 'material_grade_id', 'technical_standard_id',
+            'application_area_id', 'equipment_type_id', 'unit_of_measure'
+        ).prefetch_related(
+            Prefetch('reviews', queryset=Review.objects.filter(is_approved=True)),
+            Prefetch('variants', queryset=ProductVariant.objects.filter(is_available=True))
+        ).filter(stock__gt=0, is_available=True)
+    
+@method_decorator(cache_page(60 * 30), name='dispatch')  # Cache for 30 minutes
 class ProductsIDDetailView(generics.ListAPIView):
-    """Vvidvod predmetov"""
-    search_fields = ['name']
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    """Optimized single product view"""
     serializer_class = ProductsDataSerializer
+    
     def get_queryset(self):
-        return Products.objects.filter(id=self.kwargs['pk'])
+        product_id = self.kwargs['pk']
+        cache_key = f'product_detail_{product_id}'
+        
+        # Try to get from cache first
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
+            
+        queryset = Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'product_type_id',
+            'material_type_id', 'material_grade_id', 'technical_standard_id',
+            'application_area_id', 'equipment_type_id', 'unit_of_measure'
+        ).prefetch_related(
+            Prefetch('reviews', queryset=Review.objects.filter(is_approved=True).select_related('user')),
+            Prefetch('variants', queryset=ProductVariant.objects.filter(is_available=True))
+        ).filter(id=product_id)
+        
+        # Cache the result
+        cache.set(cache_key, queryset, 60 * 30)
+        return queryset
         
         
     
+@method_decorator(cache_page(60 * 10), name='dispatch')  # Cache for 10 minutes
 class ProductsCategoryIDDetailView(generics.ListAPIView):
-    """Vvidvod predmetov"""
-    search_fields = ['name']
+    """Optimized products by category view"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     serializer_class = ProductsDataSerializer
+    ordering = ['-created_at']
+    
     def get_queryset(self):
-        # Get the 'category_id' from the URL (or query parameters, as needed)
         category_ids = self.kwargs.get('pk', None)
         
-        if category_ids:
-            # Check if category_ids is a single integer or a comma-separated string
+        if not category_ids:
+            return Products.objects.none()
+        
+        try:
+            # Handle comma-separated category IDs
             if isinstance(category_ids, str):
-                # If it's a string, split by commas to get multiple category IDs
-                category_ids = category_ids.split(',')
+                category_ids = [int(id.strip()) for id in category_ids.split(',')]
             else:
-                # If it's a single integer, make it a list
-                category_ids = [category_ids]
+                category_ids = [int(category_ids)]
             
-            # Convert the category_ids into integers to ensure we are working with valid IDs
-            category_ids = [int(id) for id in category_ids]
-
-            # Change `category_id` to `category__id` if `category` is a foreign key field
-            return Products.objects.filter(categoty_id__id__in=category_ids)
-
-        return Products.objects.all()
+            cache_key = f'products_category_{"_".join(map(str, category_ids))}'
+            cached_result = cache.get(cache_key)
+            
+            if cached_result:
+                return cached_result
+            
+            queryset = Products.objects.select_related(
+                'categoty_id', 'brand', 'manufacturer', 'product_type_id',
+                'material_type_id', 'equipment_type_id'
+            ).filter(
+                categoty_id__id__in=category_ids,
+                stock__gt=0,
+                is_available=True
+            ).order_by('-created_at')
+            
+            # Cache the result
+            cache.set(cache_key, queryset, 60 * 10)
+            return queryset
+            
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid category IDs: {category_ids}, error: {e}")
+            return Products.objects.none()
         
         
 class ProductsBrandIDDetailView(generics.ListAPIView):
@@ -629,26 +718,438 @@ class UserRecommendationsAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class ProductsByMaterialTypeView(generics.ListAPIView):
+    """Products filtered by material type"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    serializer_class = ProductsDataSerializer
+    ordering = ['-created_at']
     
+    def get_queryset(self):
+        material_type_id = self.kwargs.get('pk')
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'material_type_id'
+        ).filter(
+            material_type_id=material_type_id,
+            stock__gt=0,
+            is_available=True
+        )
+
+class ProductsByEquipmentTypeView(generics.ListAPIView):
+    """Products filtered by equipment type"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    serializer_class = ProductsDataSerializer
+    ordering = ['-created_at']
     
-# class SubjectIDDetailView(generics.ListAPIView):
-#     """Vvidvod predmetov"""
-#     search_fields = ['name']
-#     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
-#     serializer_class = TimetableSerializer
-#     ordering = ('end_date')
-#     pagination_class = LargeResultsSetPagination
-#     def get_queryset(self):
-#         return Timetable.objects.filter(group_id=self.kwargs['pk'])
+    def get_queryset(self):
+        equipment_type_id = self.kwargs.get('pk')
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'equipment_type_id'
+        ).filter(
+            equipment_type_id=equipment_type_id,
+            stock__gt=0,
+            is_available=True
+        )
 
+class ProductsByManufacturerView(generics.ListAPIView):
+    """Products filtered by manufacturer"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    serializer_class = ProductsDataSerializer
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        manufacturer_id = self.kwargs.get('pk')
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer'
+        ).filter(
+            manufacturer=manufacturer_id,
+            stock__gt=0,
+            is_available=True
+        )
 
-# from .serializers import (
-#     GendersDataSerializer,
-# )
+class ProfessionalProductsView(generics.ListAPIView):
+    """Professional grade products"""
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    serializer_class = ProductsDataSerializer
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer'
+        ).filter(
+            is_professional=True,
+            stock__gt=0,
+            is_available=True
+        )
 
+class LowStockProductsView(generics.ListAPIView):
+    """Products with low stock levels"""
+    serializer_class = ProductsDataSerializer
+    ordering = ['stock']
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer'
+        ).filter(
+            stock__lte=models.F('min_stock_level'),
+            is_available=True
+        )
 
+class ProductVariantListView(generics.ListAPIView):
+    """List variants for a specific product"""
+    serializer_class = ProductVariantSerializer
+    
+    def get_queryset(self):
+        product_id = self.kwargs.get('pk')
+        return ProductVariant.objects.select_related('product').filter(
+            product_id=product_id,
+            is_available=True
+        )
 
-# class GendersCreateView(generics.ListCreateAPIView):
-#     queryset = Genders.objects.all()
-#     serializer_class = GendersDataSerializer
+# ============================================================================
+# BUILDING MATERIALS CRUD API VIEWS
+# ============================================================================
+
+# MaterialType CRUD Views
+class MaterialTypeListCreateView(generics.ListCreateAPIView):
+    """List all material types or create a new one"""
+    queryset = MaterialType.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return MaterialTypeListSerializer
+        return MaterialTypeSerializer
+
+class MaterialTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a material type"""
+    queryset = MaterialType.objects.all()
+    serializer_class = MaterialTypeSerializer
+
+# MaterialGrade CRUD Views
+class MaterialGradeListCreateView(generics.ListCreateAPIView):
+    """List all material grades or create a new one"""
+    queryset = MaterialGrade.objects.all()
+    serializer_class = MaterialGradeSerializer
+
+class MaterialGradeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a material grade"""
+    queryset = MaterialGrade.objects.all()
+    serializer_class = MaterialGradeSerializer
+
+# TechnicalStandard CRUD Views
+class TechnicalStandardListCreateView(generics.ListCreateAPIView):
+    """List all technical standards or create a new one"""
+    queryset = TechnicalStandard.objects.all()
+    serializer_class = TechnicalStandardSerializer
+
+class TechnicalStandardDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a technical standard"""
+    queryset = TechnicalStandard.objects.all()
+    serializer_class = TechnicalStandardSerializer
+
+# ApplicationArea CRUD Views
+class ApplicationAreaListCreateView(generics.ListCreateAPIView):
+    """List all application areas or create a new one"""
+    queryset = ApplicationArea.objects.all()
+    serializer_class = ApplicationAreaSerializer
+
+class ApplicationAreaDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete an application area"""
+    queryset = ApplicationArea.objects.all()
+    serializer_class = ApplicationAreaSerializer
+
+# EquipmentType CRUD Views
+class EquipmentTypeListCreateView(generics.ListCreateAPIView):
+    """List all equipment types or create a new one"""
+    queryset = EquipmentType.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return EquipmentTypeListSerializer
+        return EquipmentTypeSerializer
+
+class EquipmentTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete an equipment type"""
+    queryset = EquipmentType.objects.all()
+    serializer_class = EquipmentTypeSerializer
+
+# UnitOfMeasure CRUD Views
+class UnitOfMeasureListCreateView(generics.ListCreateAPIView):
+    """List all units of measure or create a new one"""
+    queryset = UnitOfMeasure.objects.all()
+    serializer_class = UnitOfMeasureSerializer
+
+class UnitOfMeasureDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a unit of measure"""
+    queryset = UnitOfMeasure.objects.all()
+    serializer_class = UnitOfMeasureSerializer
+
+# Manufacturer CRUD Views
+class ManufacturerListCreateView(generics.ListCreateAPIView):
+    """List all manufacturers or create a new one"""
+    search_fields = ['name', 'country_ru', 'country_uz', 'country_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    ordering = ['name']
+    
+    def get_queryset(self):
+        return Manufacturer.objects.prefetch_related('products')
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ManufacturerListSerializer
+        return ManufacturerSerializer
+
+class ManufacturerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a manufacturer"""
+    queryset = Manufacturer.objects.prefetch_related('products')
+    serializer_class = ManufacturerSerializer
+
+# ProductVariant CRUD Views
+class ProductVariantListCreateView(generics.ListCreateAPIView):
+    """List all product variants or create a new one"""
+    search_fields = ['variant_name_ru', 'variant_name_uz', 'variant_name_eng', 'sku']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return ProductVariant.objects.select_related('product').all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProductVariantSerializer
+        return ProductVariantCreateSerializer
+
+class ProductVariantDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a product variant"""
+    queryset = ProductVariant.objects.select_related('product')
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH', 'POST']:
+            return ProductVariantCreateSerializer
+        return ProductVariantSerializer
+
+# Enhanced Products CRUD Views
+class BuildingMaterialsProductListCreateView(generics.ListCreateAPIView):
+    """List all building materials products or create a new one"""
+    search_fields = [
+        'title_ru', 'title_uz', 'title_eng', 'brand__name',
+        'manufacturer__name', 'material_composition', 'sku'
+    ]
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'material_type_id',
+            'material_grade_id', 'technical_standard_id', 'application_area_id',
+            'equipment_type_id', 'unit_of_measure'
+        ).prefetch_related('variants', 'reviews').all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProductListSerializer
+        return BuildingMaterialsProductCreateSerializer
+
+class BuildingMaterialsProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a building materials product"""
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'categoty_id', 'brand', 'manufacturer', 'material_type_id',
+            'material_grade_id', 'technical_standard_id', 'application_area_id',
+            'equipment_type_id', 'unit_of_measure'
+        ).prefetch_related('variants', 'reviews')
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH', 'POST']:
+            return BuildingMaterialsProductCreateSerializer
+        return BuildingMaterialsProductSerializer
+
+# Specialized Product Views
+class ProfessionalProductsListView(generics.ListAPIView):
+    """List professional-grade products"""
+    serializer_class = ProductListSerializer
+    search_fields = ['title_ru', 'title_uz', 'title_eng']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(is_professional=True, is_available=True)
+
+class FeaturedProductsListView(generics.ListAPIView):
+    """List featured products"""
+    serializer_class = ProductListSerializer
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(is_featured=True, is_available=True)
+
+class NewArrivalsListView(generics.ListAPIView):
+    """List new arrival products"""
+    serializer_class = ProductListSerializer
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(is_new_arrival=True, is_available=True)
+
+class OnSaleProductsListView(generics.ListAPIView):
+    """List products on sale"""
+    serializer_class = ProductListSerializer
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(is_on_sale=True, is_available=True)
+
+# Inventory Management Views
+class LowStockProductsListView(generics.ListAPIView):
+    """List products with low stock"""
+    serializer_class = ProductListSerializer
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(
+            stock__lte=models.F('min_stock_level'),
+            is_available=True
+        ).order_by('stock')
+
+class OutOfStockProductsListView(generics.ListAPIView):
+    """List out of stock products"""
+    serializer_class = ProductListSerializer
+    
+    def get_queryset(self):
+        return Products.objects.select_related(
+            'brand', 'manufacturer', 'categoty_id'
+        ).filter(stock=0)
+
+# Statistics and Reports Views
+class ProductStatsView(APIView):
+    """Get product statistics"""
+    
+    def get(self, request):
+        stats = {
+            'total_products': Products.objects.count(),
+            'in_stock_products': Products.objects.filter(stock__gt=0).count(),
+            'low_stock_products': Products.objects.filter(
+                stock__lte=models.F('min_stock_level'), stock__gt=0
+            ).count(),
+            'professional_products': Products.objects.filter(is_professional=True).count(),
+            'featured_products': Products.objects.filter(is_featured=True).count(),
+            'total_categories': Category.objects.count(),
+            'total_brands': Brand.objects.count(),
+            'total_manufacturers': Manufacturer.objects.count(),
+        }
+        
+        serializer = ProductStatsSerializer(stats)
+        return Response(serializer.data)
+
+class InventoryReportView(APIView):
+    """Get inventory report"""
+    
+    def get(self, request):
+        products = Products.objects.select_related('brand', 'manufacturer').all()
+        
+        inventory_data = []
+        for product in products:
+            if product.stock <= product.min_stock_level:
+                status = 'Low Stock' if product.stock > 0 else 'Out of Stock'
+            else:
+                status = 'In Stock'
+            
+            inventory_data.append({
+                'product_id': product.id,
+                'title': product.title_ru or product.title_uz or product.title_eng,
+                'current_stock': product.stock,
+                'min_stock_level': product.min_stock_level,
+                'stock_status': status,
+                'last_updated': product.updated_at
+            })
+        
+        serializer = InventoryReportSerializer(inventory_data, many=True)
+        return Response(serializer.data)
+
+# Bulk Operations Views
+class BulkUpdateStockView(APIView):
+    """Bulk update stock levels"""
+    
+    def post(self, request):
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response(
+                {'error': 'No updates provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_products = []
+        
+        for update in updates:
+            product_id = update.get('product_id')
+            new_stock = update.get('stock')
+            
+            if not product_id or new_stock is None:
+                continue
+            
+            try:
+                product = Products.objects.get(id=product_id)
+                product.stock = new_stock
+                product.save()
+                updated_products.append({
+                    'product_id': product_id,
+                    'title': product.title_ru,
+                    'new_stock': new_stock
+                })
+            except Products.DoesNotExist:
+                continue
+        
+        return Response({
+            'message': f'Updated {len(updated_products)} products',
+            'updated_products': updated_products
+        })
+
+class BulkUpdatePricesView(APIView):
+    """Bulk update product prices"""
+    
+    def post(self, request):
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response(
+                {'error': 'No updates provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_products = []
+        
+        for update in updates:
+            product_id = update.get('product_id')
+            new_price = update.get('price')
+            
+            if not product_id or new_price is None:
+                continue
+            
+            try:
+                product = Products.objects.get(id=product_id)
+                product.price = new_price
+                product.save()
+                updated_products.append({
+                    'product_id': product_id,
+                    'title': product.title_ru,
+                    'new_price': new_price
+                })
+            except Products.DoesNotExist:
+                continue
+        
+        return Response({
+            'message': f'Updated {len(updated_products)} products',
+            'updated_products': updated_products
+        })
 

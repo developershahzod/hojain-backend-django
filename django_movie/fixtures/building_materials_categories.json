@@ -1,0 +1,132 @@
+[
+  {
+    "model": "movies.category",
+    "pk": 1,
+    "fields": {
+      "number": 1,
+      "title_uz": "Qurilish materiallari",
+      "title_ru": "Строительные материалы",
+      "title_eng": "Construction Materials",
+      "sub_id": null,
+      "icon": "fas fa-hammer",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 2,
+    "fields": {
+      "number": 2,
+      "title_uz": "Beton va tsement",
+      "title_ru": "Бетон и цемент",
+      "title_eng": "Concrete and Cement",
+      "sub_id": 1,
+      "icon": "fas fa-cube",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 3,
+    "fields": {
+      "number": 3,
+      "title_uz": "Po'lat va metall",
+      "title_ru": "Сталь и металл",
+      "title_eng": "Steel and Metal",
+      "sub_id": 1,
+      "icon": "fas fa-industry",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 4,
+    "fields": {
+      "number": 4,
+      "title_uz": "Yog'och va lumber",
+      "title_ru": "Древесина и пиломатериалы",
+      "title_eng": "Lumber and Wood",
+      "sub_id": 1,
+      "icon": "fas fa-tree",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 5,
+    "fields": {
+      "number": 5,
+      "title_uz": "Asboblar va uskunalar",
+      "title_ru": "Инструменты и оборудование",
+      "title_eng": "Tools and Equipment",
+      "sub_id": null,
+      "icon": "fas fa-tools",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 6,
+    "fields": {
+      "number": 6,
+      "title_uz": "Elektr asboblari",
+      "title_ru": "Электроинструменты",
+      "title_eng": "Power Tools",
+      "sub_id": 5,
+      "icon": "fas fa-bolt",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 7,
+    "fields": {
+      "number": 7,
+      "title_uz": "Qo'l asboblari",
+      "title_ru": "Ручные инструменты",
+      "title_eng": "Hand Tools",
+      "sub_id": 5,
+      "icon": "fas fa-wrench",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 8,
+    "fields": {
+      "number": 8,
+      "title_uz": "Og'ir uskunalar",
+      "title_ru": "Тяжелое оборудование",
+      "title_eng": "Heavy Equipment",
+      "sub_id": 5,
+      "icon": "fas fa-truck",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 9,
+    "fields": {
+      "number": 9,
+      "title_uz": "Mahkamlagichlar",
+      "title_ru": "Крепежные изделия",
+      "title_eng": "Hardware & Fasteners",
+      "sub_id": null,
+      "icon": "fas fa-screwdriver",
+      "status": true
+    }
+  },
+  {
+    "model": "movies.category",
+    "pk": 10,
+    "fields": {
+      "number": 10,
+      "title_uz": "Tom qoplama",
+      "title_ru": "Кровельные материалы",
+      "title_eng": "Roofing Materials",
+      "sub_id": 1,
+      "icon": "fas fa-home",
+      "status": true
+    }
+  }
+]

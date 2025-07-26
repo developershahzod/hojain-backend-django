@@ -1,0 +1,134 @@
+[
+  {
+    "model": "movies.materialtype",
+    "pk": 1,
+    "fields": {
+      "title_uz": "Metall",
+      "title_ru": "Металл",
+      "title_eng": "Metal"
+    }
+  },
+  {
+    "model": "movies.materialtype",
+    "pk": 2,
+    "fields": {
+      "title_uz": "Yog'och",
+      "title_ru": "Древесина",
+      "title_eng": "Wood"
+    }
+  },
+  {
+    "model": "movies.materialtype",
+    "pk": 3,
+    "fields": {
+      "title_uz": "Beton",
+      "title_ru": "Бетон",
+      "title_eng": "Concrete"
+    }
+  },
+  {
+    "model": "movies.materialtype",
+    "pk": 4,
+    "fields": {
+      "title_uz": "Plastik",
+      "title_ru": "Пластик",
+      "title_eng": "Plastic"
+    }
+  },
+  {
+    "model": "movies.materialtype",
+    "pk": 5,
+    "fields": {
+      "title_uz": "Keramika",
+      "title_ru": "Керамика",
+      "title_eng": "Ceramic"
+    }
+  },
+  {
+    "model": "movies.materialgrade",
+    "pk": 1,
+    "fields": {
+      "title_uz": "Yuqori sifat",
+      "title_ru": "Высший сорт",
+      "title_eng": "Premium Grade"
+    }
+  },
+  {
+    "model": "movies.materialgrade",
+    "pk": 2,
+    "fields": {
+      "title_uz": "Standart sifat",
+      "title_ru": "Стандартный сорт",
+      "title_eng": "Standard Grade"
+    }
+  },
+  {
+    "model": "movies.materialgrade",
+    "pk": 3,
+    "fields": {
+      "title_uz": "Iqtisodiy sifat",
+      "title_ru": "Эконом класс",
+      "title_eng": "Economy Grade"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 1,
+    "fields": {
+      "name_uz": "Dona",
+      "name_ru": "Штука",
+      "name_eng": "Piece",
+      "symbol": "шт"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 2,
+    "fields": {
+      "name_uz": "Metr",
+      "name_ru": "Метр",
+      "name_eng": "Meter",
+      "symbol": "м"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 3,
+    "fields": {
+      "name_uz": "Kvadrat metr",
+      "name_ru": "Квадратный метр",
+      "name_eng": "Square Meter",
+      "symbol": "м²"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 4,
+    "fields": {
+      "name_uz": "Kub metr",
+      "name_ru": "Кубический метр",
+      "name_eng": "Cubic Meter",
+      "symbol": "м³"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 5,
+    "fields": {
+      "name_uz": "Kilogram",
+      "name_ru": "Килограмм",
+      "name_eng": "Kilogram",
+      "symbol": "кг"
+    }
+  },
+  {
+    "model": "movies.unitofmeasure",
+    "pk": 6,
+    "fields": {
+      "name_uz": "Tonna",
+      "name_ru": "Тонна",
+      "name_eng": "Ton",
+      "symbol": "т"
+    }
+  }
+]

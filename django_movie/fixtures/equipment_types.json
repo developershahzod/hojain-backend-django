@@ -1,0 +1,178 @@
+[
+  {
+    "model": "movies.equipmenttype",
+    "pk": 1,
+    "fields": {
+      "title_uz": "Burg'ulash asboblari",
+      "title_ru": "Сверлильные инструменты",
+      "title_eng": "Drilling Tools",
+      "is_power_tool": true,
+      "requires_certification": false
+    }
+  },
+  {
+    "model": "movies.equipmenttype",
+    "pk": 2,
+    "fields": {
+      "title_uz": "Kesish asboblari",
+      "title_ru": "Режущие инструменты",
+      "title_eng": "Cutting Tools",
+      "is_power_tool": true,
+      "requires_certification": false
+    }
+  },
+  {
+    "model": "movies.equipmenttype",
+    "pk": 3,
+    "fields": {
+      "title_uz": "Payvandlash uskunalari",
+      "title_ru": "Сварочное оборудование",
+      "title_eng": "Welding Equipment",
+      "is_power_tool": true,
+      "requires_certification": true
+    }
+  },
+  {
+    "model": "movies.equipmenttype",
+    "pk": 4,
+    "fields": {
+      "title_uz": "O'lchash asboblari",
+      "title_ru": "Измерительные инструменты",
+      "title_eng": "Measuring Tools",
+      "is_power_tool": false,
+      "requires_certification": false
+    }
+  },
+  {
+    "model": "movies.equipmenttype",
+    "pk": 5,
+    "fields": {
+      "title_uz": "Xavfsizlik uskunalari",
+      "title_ru": "Оборудование безопасности",
+      "title_eng": "Safety Equipment",
+      "is_power_tool": false,
+      "requires_certification": true
+    }
+  },
+  {
+    "model": "movies.manufacturer",
+    "pk": 1,
+    "fields": {
+      "name": "Bosch",
+      "country_uz": "Germaniya",
+      "country_ru": "Германия",
+      "country_eng": "Germany",
+      "website": "https://www.bosch.com"
+    }
+  },
+  {
+    "model": "movies.manufacturer",
+    "pk": 2,
+    "fields": {
+      "name": "Makita",
+      "country_uz": "Yaponiya",
+      "country_ru": "Япония",
+      "country_eng": "Japan",
+      "website": "https://www.makita.com"
+    }
+  },
+  {
+    "model": "movies.manufacturer",
+    "pk": 3,
+    "fields": {
+      "name": "DeWalt",
+      "country_uz": "AQSh",
+      "country_ru": "США",
+      "country_eng": "USA",
+      "website": "https://www.dewalt.com"
+    }
+  },
+  {
+    "model": "movies.manufacturer",
+    "pk": 4,
+    "fields": {
+      "name": "Hilti",
+      "country_uz": "Lixtenshtayn",
+      "country_ru": "Лихтенштейн",
+      "country_eng": "Liechtenstein",
+      "website": "https://www.hilti.com"
+    }
+  },
+  {
+    "model": "movies.manufacturer",
+    "pk": 5,
+    "fields": {
+      "name": "Caterpillar",
+      "country_uz": "AQSh",
+      "country_ru": "США",
+      "country_eng": "USA",
+      "website": "https://www.caterpillar.com"
+    }
+  },
+  {
+    "model": "movies.applicationarea",
+    "pk": 1,
+    "fields": {
+      "title_uz": "Uy qurilishi",
+      "title_ru": "Жилищное строительство",
+      "title_eng": "Residential Construction"
+    }
+  },
+  {
+    "model": "movies.applicationarea",
+    "pk": 2,
+    "fields": {
+      "title_uz": "Tijorat qurilishi",
+      "title_ru": "Коммерческое строительство",
+      "title_eng": "Commercial Construction"
+    }
+  },
+  {
+    "model": "movies.applicationarea",
+    "pk": 3,
+    "fields": {
+      "title_uz": "Sanoat qurilishi",
+      "title_ru": "Промышленное строительство",
+      "title_eng": "Industrial Construction"
+    }
+  },
+  {
+    "model": "movies.applicationarea",
+    "pk": 4,
+    "fields": {
+      "title_uz": "Yo'l qurilishi",
+      "title_ru": "Дорожное строительство",
+      "title_eng": "Road Construction"
+    }
+  },
+  {
+    "model": "movies.technicalstandard",
+    "pk": 1,
+    "fields": {
+      "title_uz": "GOST standartlari",
+      "title_ru": "Стандарты ГОСТ",
+      "title_eng": "GOST Standards",
+      "standard_code": "GOST"
+    }
+  },
+  {
+    "model": "movies.technicalstandard",
+    "pk": 2,
+    "fields": {
+      "title_uz": "ISO standartlari",
+      "title_ru": "Стандарты ISO",
+      "title_eng": "ISO Standards",
+      "standard_code": "ISO"
+    }
+  },
+  {
+    "model": "movies.technicalstandard",
+    "pk": 3,
+    "fields": {
+      "title_uz": "ASTM standartlari",
+      "title_ru": "Стандарты ASTM",
+      "title_eng": "ASTM Standards",
+      "standard_code": "ASTM"
+    }
+  }
+]

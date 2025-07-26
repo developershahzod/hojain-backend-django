@@ -17,67 +17,87 @@ from django.urls import reverse
 
 
 class Clients(models.Model):
+    GENDER_CHOICES = [
+        (1, 'Male'),
+        (2, 'Female'),
+        (3, 'Other'),
+    ]
+    
+    CLIENT_TYPE_CHOICES = [
+        (1, 'Regular'),
+        (2, 'Premium'),
+        (3, 'VIP'),
+    ]
+    
+    LANGUAGE_CHOICES = [
+        ('uz', 'Uzbek'),
+        ('ru', 'Russian'),
+        ('en', 'English'),
+    ]
+    
     id = models.AutoField("id", primary_key=True)
-    name =  models.CharField("Name", max_length=500, blank=True)
-    surname =  models.CharField("surname", max_length=500, blank=True)
-    gender_id = models.IntegerField("gender_id", blank=True)
+    name = models.CharField("Name", max_length=100, blank=True, db_index=True)
+    surname = models.CharField("surname", max_length=100, blank=True, db_index=True)
+    gender_id = models.IntegerField("gender_id", choices=GENDER_CHOICES, blank=True, null=True)
     
-    birth_data =  models.CharField("birth_data", max_length=500, blank=True)
+    birth_data = models.DateField("birth_data", blank=True, null=True)
     
-    location =  models.CharField("city", max_length=500, blank=True)
+    location = models.CharField("city", max_length=100, blank=True, db_index=True)
     
-    address =  models.CharField("address", max_length=500, blank=True)
+    address = models.TextField("address", blank=True)
     
-    phone =  models.CharField("Phone", max_length=500, blank=True)
+    phone = models.CharField("Phone", max_length=20, blank=True, unique=True, db_index=True)
     
-    lang =  models.CharField("lang", max_length=500, blank=True)
-
+    lang = models.CharField("lang", max_length=5, choices=LANGUAGE_CHOICES, default='ru', blank=True)
     
+    client_type = models.IntegerField("client_type", choices=CLIENT_TYPE_CHOICES, default=1, blank=True)
     
-    client_type =  models.IntegerField("client_type", blank=True)
-    
-    
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is created
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    
     class Meta:
-        verbose_name = "Clients" 
-        verbose_name_plural = "Клиенты"  
+        verbose_name = "Client"
+        verbose_name_plural = "Клиенты"
+        indexes = [
+            models.Index(fields=['phone']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['name', 'surname']),
+        ]
     
     def __str__(self):
-        return self.phone
+        return f"{self.name} {self.surname} ({self.phone})" if self.name else self.phone
         
 class Category(models.Model):
     id = models.AutoField(primary_key=True)
     
-    number = models.IntegerField()
+    number = models.PositiveIntegerField(db_index=True)
     
-    
-    title_uz =  models.CharField("title_uz", max_length=500, blank=True)
-    
-    title_ru =  models.CharField("title_ru", max_length=500, blank=True)
-    
-    title_eng =  models.CharField("title_eng", max_length=500, blank=True)
-    
-    
+    title_uz = models.CharField("title_uz", max_length=200, blank=True, db_index=True)
+    title_ru = models.CharField("title_ru", max_length=200, blank=True, db_index=True)
+    title_eng = models.CharField("title_eng", max_length=200, blank=True, db_index=True)
     
     sub_id = models.ForeignKey(
-        'Category', verbose_name="Category ID", on_delete=models.CASCADE, blank=True, null=True 
+        'self', verbose_name="Parent Category", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='subcategories'
     )
-    icon =  models.CharField("icon", max_length=500, blank=True)
+    icon = models.CharField("icon", max_length=100, blank=True)
     
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=True, db_index=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is created
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Category" 
-        verbose_name_plural = "Категории" 
+        verbose_name = "Category"
+        verbose_name_plural = "Категории"
+        ordering = ['number', 'title_ru']
+        indexes = [
+            models.Index(fields=['status', 'number']),
+            models.Index(fields=['sub_id']),
+        ]
     
     def __str__(self):
-        return self.title_ru
+        return self.title_ru or self.title_uz or self.title_eng or f"Category {self.id}"
 
 class Brand(models.Model):
     id = models.AutoField(primary_key=True)
@@ -96,15 +116,15 @@ class Brand(models.Model):
         return self.name
         
         
-class Forwhom(models.Model):
+class MaterialType(models.Model):
     id = models.AutoField(primary_key=True)
     title_uz = models.CharField(max_length=255)
     title_ru = models.CharField(max_length=255)
     title_eng = models.CharField(max_length=255)
     
     class Meta:
-        verbose_name = "Forwhom" 
-        verbose_name_plural = "Для кого" 
+        verbose_name = "MaterialType"
+        verbose_name_plural = "Тип материала"
 
     def __str__(self):
         return self.title_ru
@@ -125,15 +145,15 @@ class NotificationToken(models.Model):
         return self.token
         
 
-class Skintype(models.Model):
+class MaterialGrade(models.Model):
     id = models.AutoField(primary_key=True)
     title_uz = models.CharField(max_length=255)
     title_ru = models.CharField(max_length=255)
     title_eng = models.CharField(max_length=255)
     
     class Meta:
-        verbose_name = "Skintype" 
-        verbose_name_plural = "Тип кожи" 
+        verbose_name = "MaterialGrade"
+        verbose_name_plural = "Класс материала"
 
     def __str__(self):
         return self.title_ru
@@ -159,33 +179,78 @@ class MobileDocuments(models.Model):
     def __str__(self):
         return self.title_ru
         
-class Hairtype(models.Model):
+class TechnicalStandard(models.Model):
+    id = models.AutoField(primary_key=True)
+    title_uz = models.CharField(max_length=255,  blank=True, null=True)
+    title_ru = models.CharField(max_length=255,  blank=True, null=True)
+    title_eng = models.CharField(max_length=255,  blank=True, null=True)
+    standard_code = models.CharField(max_length=100, blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "TechnicalStandard"
+        verbose_name_plural = "Технические стандарты"
+
+    def __str__(self):
+        return f"{self.title_ru} ({self.standard_code})" if self.standard_code else self.title_ru
+        
+
+class ApplicationArea(models.Model):
     id = models.AutoField(primary_key=True)
     title_uz = models.CharField(max_length=255,  blank=True, null=True)
     title_ru = models.CharField(max_length=255,  blank=True, null=True)
     title_eng = models.CharField(max_length=255,  blank=True, null=True)
     
     class Meta:
-        verbose_name = "Hairtype" 
-        verbose_name_plural = "Тип волос" 
+        verbose_name = "ApplicationArea"
+        verbose_name_plural = "Область применения"
 
     def __str__(self):
         return self.title_ru
         
 
-class ProductArea(models.Model):
+class Manufacturer(models.Model):
     id = models.AutoField(primary_key=True)
-    title_uz = models.CharField(max_length=255,  blank=True, null=True)
-    title_ru = models.CharField(max_length=255,  blank=True, null=True)
-    title_eng = models.CharField(max_length=255,  blank=True, null=True)
+    name = models.CharField(max_length=255)
+    country_uz = models.CharField(max_length=100, blank=True, null=True)
+    country_ru = models.CharField(max_length=100, blank=True, null=True)
+    country_eng = models.CharField(max_length=100, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
     
     class Meta:
-        verbose_name = "ProductArea" 
-        verbose_name_plural = "Oбласть применения" 
+        verbose_name = "Manufacturer"
+        verbose_name_plural = "Производители"
+
+    def __str__(self):
+        return self.name
+
+class UnitOfMeasure(models.Model):
+    id = models.AutoField(primary_key=True)
+    name_uz = models.CharField(max_length=50)
+    name_ru = models.CharField(max_length=50)
+    name_eng = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=10)
+    
+    class Meta:
+        verbose_name = "UnitOfMeasure"
+        verbose_name_plural = "Единицы измерения"
+
+    def __str__(self):
+        return f"{self.name_ru} ({self.symbol})"
+
+class EquipmentType(models.Model):
+    id = models.AutoField(primary_key=True)
+    title_uz = models.CharField(max_length=255)
+    title_ru = models.CharField(max_length=255)
+    title_eng = models.CharField(max_length=255)
+    is_power_tool = models.BooleanField(default=False)
+    requires_certification = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = "EquipmentType"
+        verbose_name_plural = "Типы оборудования"
 
     def __str__(self):
         return self.title_ru
-        
 
 class AIforSales(models.Model):
     id = models.AutoField(primary_key=True)
@@ -193,8 +258,8 @@ class AIforSales(models.Model):
     status = models.CharField(max_length=255,  blank=True, null=True)
     
     class Meta:
-        verbose_name = "AIforSales" 
-        verbose_name_plural = "ИИ для продаж" 
+        verbose_name = "AIforSales"
+        verbose_name_plural = "ИИ для продаж"
 
     def __str__(self):
         return self.name
@@ -352,190 +417,315 @@ class TopTypes(models.Model):
         
         
 class Products(models.Model):
+    UNIT_TYPE_CHOICES = [
+        ('ШТ', 'ШТУКИ'),
+        ('М', 'МЕТРЫ'),
+        ('М2', 'КВАДРАТНЫЕ МЕТРЫ'),
+        ('М3', 'КУБИЧЕСКИЕ МЕТРЫ'),
+        ('КГ', 'КИЛОГРАММЫ'),
+        ('Т', 'ТОННЫ'),
+        ('Л', 'ЛИТРЫ'),
+        ('УП', 'УПАКОВКИ'),
+        ('КМП', 'КОМПЛЕКТЫ'),
+    ]
+    
+    PRODUCT_TYPE_CHOICES = [
+        ('MATERIAL', 'Строительный материал'),
+        ('TOOL', 'Инструмент'),
+        ('EQUIPMENT', 'Оборудование'),
+        ('FASTENER', 'Крепеж'),
+        ('CHEMICAL', 'Химические материалы'),
+    ]
+    
     id = models.AutoField(primary_key=True)
     
-    title_uz =  models.CharField("Название uz", max_length=500, blank=True)
+    # Multilingual titles with proper indexing
+    title_uz = models.CharField("Название uz", max_length=300, blank=True, db_index=True)
     description_uz = models.TextField(blank=True, null=True)
     
-    title_ru =  models.CharField("Название ru", max_length=500, blank=True)
+    title_ru = models.CharField("Название ru", max_length=300, blank=True, db_index=True)
     description_ru = models.TextField(blank=True, null=True)
     
-    title_eng =  models.CharField("Название eng", max_length=500, blank=True)
+    title_eng = models.CharField("Название eng", max_length=300, blank=True, db_index=True)
     description_eng = models.TextField(blank=True, null=True)
     
+    # Technical specifications
+    specifications_uz = models.TextField("Технические характеристики uz", blank=True, null=True)
+    specifications_ru = models.TextField("Технические характеристики ru", blank=True, null=True)
+    specifications_eng = models.TextField("Технические характеристики eng", blank=True, null=True)
     
+    installation_guide_uz = models.TextField("Руководство по установке uz", blank=True, null=True)
+    installation_guide_ru = models.TextField("Руководство по установке ru", blank=True, null=True)
+    installation_guide_eng = models.TextField("Руководство по установке eng", blank=True, null=True)
     
-    naznachenie_uz = models.TextField(blank=True, null=True)
-    naznachenie_ru = models.TextField(blank=True, null=True)
-    naznachenie_eng = models.TextField(blank=True, null=True)
+    # Dimensions and measurements
+    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True, null=True)
     
-    primeneniye_uz = models.TextField(blank=True, null=True)
-    primeneniye_ru = models.TextField(blank=True, null=True)
-    primeneniye_eng = models.TextField(blank=True, null=True)
-    
-    
-
-    volume_name_ru =  models.CharField("объем", max_length=500, blank=True)
-    
-    VOLUME_TYPE_CHOICES = [
-        ('МЛ', 'ОБЪЁМ / МЛ'),
-        ('ШТ', 'КОЛИЧЕСТВО / ШТ'),
-        ('Г', 'ВЕС / Г'),
-    ]
-    volume_type = models.CharField(
+    # Unit and quantity
+    unit_name_ru = models.CharField("единица измерения", max_length=100, blank=True)
+    unit_type = models.CharField(
         max_length=10,
-        choices=VOLUME_TYPE_CHOICES,
-        default='МЛ',
-         blank=True
+        choices=UNIT_TYPE_CHOICES,
+        default='ШТ',
+        blank=True
     )
-
-
     
+    # Product classification
+    product_type = models.CharField(
+        max_length=20,
+        choices=PRODUCT_TYPE_CHOICES,
+        default='MATERIAL',
+        blank=True
+    )
     
-    # primechaniye_uz =  models.TextField()
-    # primechaniye_ru =  models.TextField()
-    # primechaniye_eng =  models.TextField()
+    # Material properties
+    material_composition = models.TextField("Состав материала", blank=True)
+    color_options = models.CharField("Варианты цветов", max_length=500, blank=True)
+    surface_finish = models.CharField("Отделка поверхности", max_length=200, blank=True)
     
+    # Certification and standards
+    certificate_number = models.CharField("Номер сертификата", max_length=100, blank=True)
+    compliance_standards = models.CharField("Соответствие стандартам", max_length=300, blank=True)
     
-    sostav =  models.CharField("sostav", max_length=1000, blank=True)
-
+    # Environmental and safety
+    fire_resistance_class = models.CharField("Класс огнестойкости", max_length=50, blank=True)
+    environmental_class = models.CharField("Экологический класс", max_length=50, blank=True)
+    safety_requirements = models.TextField("Требования безопасности", blank=True)
     
+    # Pricing and inventory
+    price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, db_index=True)
+    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True, null=True)
+    stock = models.PositiveIntegerField(default=0, db_index=True)
+    min_stock_level = models.PositiveIntegerField("Минимальный остаток", default=0)
     
-
-    
-    
-    
-    price = models.DecimalField(max_digits=10, decimal_places=2,  blank=True)
+    # Foreign key relationships with proper indexing
     categoty_id = models.ForeignKey(
-        Category, verbose_name="Категория", on_delete=models.CASCADE, blank=True
+        Category, verbose_name="Категория", on_delete=models.CASCADE,
+        blank=True, null=True, db_index=True, related_name='products'
     )
     product_type_id = models.ForeignKey(
-        ProductType, verbose_name="Тип продукта ", on_delete=models.CASCADE, blank=True, null=True
+        ProductType, verbose_name="Тип продукта", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
     )
-    
     product_bundle_id = models.ForeignKey(
-        ProductBundle, verbose_name="Связка товара ", on_delete=models.CASCADE, blank=True, null=True
+        ProductBundle, verbose_name="Связка товара", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
     )
-    
     product_color = models.ForeignKey(
-        ProductColor, verbose_name="Product color ", on_delete=models.CASCADE, blank=True, null=True
+        ProductColor, verbose_name="Цвет продукта", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
     )
-    
-    product_color_type = models.BooleanField(default=False,  blank=True)
-    
-    
     brand = models.ForeignKey(
-        Brand, verbose_name="Бренд", on_delete=models.CASCADE, blank=True,null=True
+        Brand, verbose_name="Бренд", on_delete=models.CASCADE,
+        blank=True, null=True, db_index=True, related_name='products'
     )
-    
+    manufacturer = models.ForeignKey(
+        Manufacturer, verbose_name="Производитель", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
     ai = models.ForeignKey(
-        AIforSales, verbose_name="ИИ для продаж", on_delete=models.CASCADE, blank=True, null=True
+        AIforSales, verbose_name="ИИ для продаж", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
     )
-    
     top_type_id = models.ForeignKey(
-        TopTypes, verbose_name="Топ типы продукта ", on_delete=models.CASCADE, blank=True,null=True
+        TopTypes, verbose_name="Топ типы продукта", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    material_type_id = models.ForeignKey(
+        MaterialType, verbose_name="Тип материала", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    material_grade_id = models.ForeignKey(
+        MaterialGrade, verbose_name="Класс материала", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    technical_standard_id = models.ForeignKey(
+        TechnicalStandard, verbose_name="Технический стандарт", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    application_area_id = models.ForeignKey(
+        ApplicationArea, verbose_name="Область применения", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    equipment_type_id = models.ForeignKey(
+        EquipmentType, verbose_name="Тип оборудования", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
+    )
+    unit_of_measure = models.ForeignKey(
+        UnitOfMeasure, verbose_name="Единица измерения", on_delete=models.CASCADE,
+        blank=True, null=True, related_name='products'
     )
     
+    # Media files
+    video = models.FileField(upload_to='products/videos/%Y/%m/', blank=True, null=True)
+    main_image = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image1 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image4 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image5 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
+    image6 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
     
-    for_whom_id = models.ForeignKey(
-        Forwhom, verbose_name="Для кого ", on_delete=models.CASCADE, blank=True,null=True
-    )
+    # Boolean flags with indexing for filtering
+    is_featured = models.BooleanField("Рекомендуемый", default=False, blank=True, db_index=True)
+    is_new_arrival = models.BooleanField("Новинка", default=False, blank=True, db_index=True)
+    is_bestseller = models.BooleanField("Хит продаж", default=False, blank=True, db_index=True)
+    is_on_sale = models.BooleanField("Акция", default=False, blank=True, db_index=True)
+    is_professional = models.BooleanField("Профессиональный", default=False, blank=True)
+    requires_delivery = models.BooleanField("Требует доставки", default=True, blank=True)
+    is_hazardous = models.BooleanField("Опасный груз", default=False, blank=True)
+    is_fragile = models.BooleanField("Хрупкий", default=False, blank=True)
     
-    skin_type_id = models.ForeignKey(
-        Skintype, verbose_name="Тип Кожи", on_delete=models.CASCADE, blank=True,null=True
-    )
+    # Availability and delivery
+    is_available = models.BooleanField("Доступен", default=True, blank=True, db_index=True)
+    delivery_days = models.PositiveIntegerField("Дни доставки", default=1, blank=True)
     
-    hair_type_id = models.ForeignKey(
-        Hairtype, verbose_name="Тип волос", on_delete=models.CASCADE, blank=True,null=True
-    )
-    
-    product_area_id = models.ForeignKey(
-        ProductArea, verbose_name="Область применения", on_delete=models.CASCADE, blank=True,null=True
-    )
-    
-    video = models.FileField(upload_to='videos/', blank=True, null=True)
-    main_image = models.ImageField(upload_to='products/', blank=True, null=True)
-    image1 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image2 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image4 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image5 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image6 = models.ImageField(upload_to='products/', blank=True, null=True)
-    stock = models.IntegerField( blank=True)
-    
-    hit = models.BooleanField(default=False,  blank=True)
-    
-    bestsellers = models.BooleanField(default=False,  blank=True)
-    
-    gift_cart = models.BooleanField(default=False,  blank=True)
-    
-    brand_bestsellers = models.BooleanField(default=False,  blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is created
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    
     class Meta:
-        verbose_name = "Products" 
-        verbose_name_plural = "Продукты"
-    
+        verbose_name = "Product"
+        verbose_name_plural = "Строительные материалы и оборудование"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['price']),
+            models.Index(fields=['stock']),
+            models.Index(fields=['categoty_id', 'price']),
+            models.Index(fields=['brand', 'price']),
+            models.Index(fields=['manufacturer']),
+            models.Index(fields=['is_featured', 'is_bestseller']),
+            models.Index(fields=['product_type']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['title_ru', 'title_uz']),
+            models.Index(fields=['material_type_id']),
+            models.Index(fields=['equipment_type_id']),
+        ]
     
     def __str__(self):
-        return self.title_ru
+        return self.title_ru or self.title_uz or self.title_eng or f"Product {self.id}"
+    
+    @property
+    def is_in_stock(self):
+        return self.stock > 0
+    
+    @property
+    def is_low_stock(self):
+        return self.stock <= self.min_stock_level
+    
+    @property
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if reviews:
+            return sum(review.rating for review in reviews) / len(reviews)
+        return 0
+    
+    @property
+    def total_dimensions(self):
+        """Calculate total volume in cubic meters"""
+        if self.length and self.width and self.height:
+            # Convert from mm to m and calculate volume
+            return (self.length / 1000) * (self.width / 1000) * (self.height / 1000)
+        return None
+    
+    @property
+    def profit_margin(self):
+        """Calculate profit margin percentage"""
+        if self.price and self.cost_price:
+            return ((self.price - self.cost_price) / self.price) * 100
+        return None
         
-class ParrentProduct(models.Model):
+class ProductVariant(models.Model):
+    """Product variants for different sizes, colors, specifications"""
     id = models.AutoField(primary_key=True)
     
-    product = models.ForeignKey(Products, related_name='product', on_delete=models.CASCADE)
+    product = models.ForeignKey(Products, related_name='variants', on_delete=models.CASCADE)
     
-    volume_name_uz =  models.CharField("volume_name_uz", max_length=500, blank=True)
-    volume_name_ru =  models.CharField("volume_name_ru", max_length=500, blank=True)
-    volume_name_eng =  models.CharField("volume_name_eng", max_length=500, blank=True)
+    # Variant specifications
+    variant_name_uz = models.CharField("Название варианта uz", max_length=500, blank=True)
+    variant_name_ru = models.CharField("Название варианта ru", max_length=500, blank=True)
+    variant_name_eng = models.CharField("Название варианта eng", max_length=500, blank=True)
     
+    # Dimensions for this variant
+    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
+    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True, null=True)
     
+    # Color and finish
+    color = models.CharField("Цвет", max_length=100, blank=True)
+    finish = models.CharField("Отделка", max_length=100, blank=True)
     
-    volume =  models.CharField("volume", max_length=500, blank=True)
+    # Pricing and inventory for this variant
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True, null=True)
+    stock = models.PositiveIntegerField(default=0)
     
+    # SKU for this variant
+    sku = models.CharField("Артикул", max_length=100, blank=True, unique=True)
     
+    # Images for this variant
+    main_image = models.ImageField(upload_to='product_variants/%Y/%m/', blank=True, null=True)
+    image1 = models.ImageField(upload_to='product_variants/%Y/%m/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='product_variants/%Y/%m/', blank=True, null=True)
     
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    main_image = models.ImageField(upload_to='products/', blank=True, null=True)
-    image1 = models.ImageField(upload_to='products/', blank=True, null=True)
-
+    # Availability
+    is_available = models.BooleanField("Доступен", default=True)
     
-    stock = models.IntegerField()
-    
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is created
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    
-    class Meta:
-        verbose_name = "ParrentProduct" 
-        verbose_name_plural = "Родительский Продукт"
-    
-    
-    def __str__(self):
-        return self.title_ru
-        
-
-class Review(models.Model):
-    product = models.ForeignKey(Products, related_name='reviews', on_delete=models.CASCADE)
-    user = models.ForeignKey(Clients, related_name='reviews', on_delete=models.CASCADE, blank=True, null=True)
-    rating = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 6)])  # Ratings from 1 to 5
-    image1 = models.ImageField(upload_to='review/', blank=True, null=True)
-    image2 = models.ImageField(upload_to='review/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='review/', blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Review" 
+        verbose_name = "ProductVariant"
+        verbose_name_plural = "Варианты продукта"
+        unique_together = ['product', 'variant_name_ru']
+    
+    def __str__(self):
+        return f"{self.product.title_ru} - {self.variant_name_ru}" if self.variant_name_ru else f"Variant {self.id}"
+    
+    @property
+    def is_in_stock(self):
+        return self.stock > 0
+        
+
+class Review(models.Model):
+    RATING_CHOICES = [(i, i) for i in range(1, 6)]
+    
+    product = models.ForeignKey(Products, related_name='reviews', on_delete=models.CASCADE, db_index=True)
+    user = models.ForeignKey(Clients, related_name='reviews', on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+    rating = models.PositiveIntegerField(choices=RATING_CHOICES, db_index=True)
+    comment = models.TextField(blank=True, null=True)
+    
+    # Review images
+    image1 = models.ImageField(upload_to='reviews/%Y/%m/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='reviews/%Y/%m/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='reviews/%Y/%m/', blank=True, null=True)
+    
+    # Moderation fields
+    is_approved = models.BooleanField(default=True, db_index=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Review"
         verbose_name_plural = "Отзывы"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['product', 'rating']),
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['is_approved', 'rating']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'user'], name='unique_user_product_review')
+        ]
 
     def __str__(self):
-        return self.comment
+        return f"Review by {self.user} for {self.product} - {self.rating}/5"
         
 class SearchStory(models.Model):
     text = models.TextField(blank=True, null=True)
@@ -566,48 +756,85 @@ class ProductImage(models.Model):
 
         
 class Orders(models.Model):
+    STATUS_CHOICES = [
+        (1, 'Pending'),
+        (2, 'Confirmed'),
+        (3, 'Processing'),
+        (4, 'Shipped'),
+        (5, 'Delivered'),
+        (6, 'Cancelled'),
+        (7, 'Refunded'),
+    ]
+    
+    PAYMENT_TYPE_CHOICES = [
+        (1, 'Cash'),
+        (2, 'Card'),
+        (3, 'Payme'),
+        (4, 'Click'),
+        (5, 'Humo & Uzcard'),
+    ]
+    
+    DELIVERY_TYPE_CHOICES = [
+        (1, 'Standard'),
+        (2, 'Express'),
+        (3, 'Pickup'),
+    ]
+    
     id = models.AutoField(primary_key=True)
     
     user_id = models.ForeignKey(
-        Clients, verbose_name="Client ID", on_delete=models.CASCADE, blank=True
+        Clients, verbose_name="Client", on_delete=models.CASCADE,
+        blank=True, null=True, db_index=True, related_name='orders'
     )
     
-    all_sum = models.DecimalField(max_digits=10, decimal_places=2,  blank=True)
+    # Financial fields
+    all_sum = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, db_index=True)
+    delivery_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    promocode_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, default=0)
     
-    delivery_sum = models.DecimalField(max_digits=10, decimal_places=2,  blank=True)
+    # Order status and type
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1, db_index=True)
+    payment_type = models.IntegerField("payment_type", choices=PAYMENT_TYPE_CHOICES, blank=True, null=True)
+    type_delivery_date = models.IntegerField("type_delivery_date", choices=DELIVERY_TYPE_CHOICES, blank=True, null=True)
     
-    promocode_sum = models.DecimalField(max_digits=10, decimal_places=2,  blank=True)
+    # Delivery information
+    address = models.TextField("address", blank=True)
+    phone = models.CharField(max_length=20, blank=True, db_index=True)
+    name = models.CharField(max_length=100, blank=True)
+    surname = models.CharField(max_length=100, blank=True)
+    delivery_date = models.DateTimeField("delivery_date", blank=True, null=True)
     
-    status = models.IntegerField(blank=True)
-    
-    adress = models.CharField(max_length=255, blank=True)
-    phone = models.CharField(max_length=255, blank=True)
-    
-    name = models.CharField(max_length=255, blank=True)
-    surname = models.CharField(max_length=255, blank=True)
-    
-    payment_type =  models.IntegerField("payment_type", blank=True, null=True)
-    
-    type_delivery_date =  models.IntegerField("type_delivery_date", blank=True, null=True)
-    
-    delivery_date =  models.CharField("delivery_date", max_length=500, blank=True, null=True)
-    
-    
+    # Promo code
     promo = models.ForeignKey(
-        Promo, verbose_name="Promo ID", on_delete=models.CASCADE, blank=True, null=True
+        Promo, verbose_name="Promo", on_delete=models.SET_NULL,
+        blank=True, null=True, related_name='orders'
     )
     
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set when the object is created
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    
     class Meta:
-        verbose_name = "Orders" 
+        verbose_name = "Order"
         verbose_name_plural = "Заказы"
-    
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['user_id', 'status']),
+            models.Index(fields=['payment_type']),
+            models.Index(fields=['delivery_date']),
+        ]
     
     def __str__(self):
-         return f"{self.user_id}"
+        return f"Order #{self.id} - {self.name} {self.surname}"
+    
+    @property
+    def total_amount(self):
+        return (self.all_sum or 0) + (self.delivery_sum or 0) - (self.promocode_sum or 0)
+    
+    @property
+    def status_display(self):
+        return dict(self.STATUS_CHOICES).get(self.status, 'Unknown')
         
 
 class OrderProduct(models.Model):

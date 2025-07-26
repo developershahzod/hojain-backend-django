@@ -7,7 +7,14 @@ from collections import defaultdict
 from io import BytesIO
 import requests
 
-from .models import ProductColor, MobileDocuments, Promo, NotificationToken, Category, Products, ProductBundle, Hairtype, Slider, Review, Skintype, Forwhom, MainPage,New,ProductType, Clients, Orders, Brand, OrderProduct, Actual, Stories
+from .models import (
+    ProductColor, MobileDocuments, Promo, NotificationToken, Category, Products,
+    ProductBundle, Slider, Review, MainPage, New, ProductType, Clients, Orders,
+    Brand, OrderProduct, Actual, Stories, ProductVariant,
+    # New building materials models
+    MaterialType, MaterialGrade, TechnicalStandard, ApplicationArea,
+    EquipmentType, UnitOfMeasure, Manufacturer
+)
 
 
 
@@ -235,8 +242,208 @@ class NewDataSerializer(serializers.ModelSerializer):
 
     
 
-    
     class Meta:
         model = New
         fields = "__all__"
+
+# ============================================================================
+# BUILDING MATERIALS SERIALIZERS
+# ============================================================================
+
+class MaterialTypeSerializer(serializers.ModelSerializer):
+    """Serializer for MaterialType model"""
+    class Meta:
+        model = MaterialType
+        fields = "__all__"
+
+class MaterialGradeSerializer(serializers.ModelSerializer):
+    """Serializer for MaterialGrade model"""
+    class Meta:
+        model = MaterialGrade
+        fields = "__all__"
+
+class TechnicalStandardSerializer(serializers.ModelSerializer):
+    """Serializer for TechnicalStandard model"""
+    class Meta:
+        model = TechnicalStandard
+        fields = "__all__"
+
+class ApplicationAreaSerializer(serializers.ModelSerializer):
+    """Serializer for ApplicationArea model"""
+    class Meta:
+        model = ApplicationArea
+        fields = "__all__"
+
+class EquipmentTypeSerializer(serializers.ModelSerializer):
+    """Serializer for EquipmentType model"""
+    class Meta:
+        model = EquipmentType
+        fields = "__all__"
+
+class UnitOfMeasureSerializer(serializers.ModelSerializer):
+    """Serializer for UnitOfMeasure model"""
+    class Meta:
+        model = UnitOfMeasure
+        fields = "__all__"
+
+class ManufacturerSerializer(serializers.ModelSerializer):
+    """Serializer for Manufacturer model"""
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Manufacturer
+        fields = "__all__"
+    
+    def get_products_count(self, obj):
+        return obj.products.count()
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    """Serializer for ProductVariant model"""
+    product_title = serializers.CharField(source='product.title_ru', read_only=True)
+    
+    class Meta:
+        model = ProductVariant
+        fields = "__all__"
+
+class ProductVariantCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating ProductVariant"""
+    class Meta:
+        model = ProductVariant
+        fields = "__all__"
+
+# Enhanced Products Serializer with Building Materials fields
+class BuildingMaterialsProductSerializer(serializers.ModelSerializer):
+    """Enhanced Products serializer for building materials with all relationships"""
+    
+    # Related objects
+    categoty_id = CategoryDataSerializer(read_only=True)
+    brand = BrandSeralizer(read_only=True)
+    manufacturer = ManufacturerSerializer(read_only=True)
+    material_type_id = MaterialTypeSerializer(read_only=True)
+    material_grade_id = MaterialGradeSerializer(read_only=True)
+    technical_standard_id = TechnicalStandardSerializer(read_only=True)
+    application_area_id = ApplicationAreaSerializer(read_only=True)
+    equipment_type_id = EquipmentTypeSerializer(read_only=True)
+    unit_of_measure = UnitOfMeasureSerializer(read_only=True)
+    product_type_id = ProductTypeDataSerializer(read_only=True)
+    product_color = ProductColorSerializer(read_only=True)
+    
+    # Related collections
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    reviews = ReviewSeralizer(many=True, read_only=True)
+    
+    # Computed fields
+    average_rating = serializers.ReadOnlyField()
+    is_in_stock = serializers.ReadOnlyField()
+    is_low_stock = serializers.ReadOnlyField()
+    total_dimensions = serializers.ReadOnlyField()
+    profit_margin = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Products
+        fields = "__all__"
+
+class BuildingMaterialsProductCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating building materials products"""
+    
+    class Meta:
+        model = Products
+        fields = "__all__"
+    
+    def validate_price(self, value):
+        if value and value <= 0:
+            raise serializers.ValidationError("Price must be greater than 0")
+        return value
+    
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Stock cannot be negative")
+        return value
+    
+    def validate(self, data):
+        # Validate dimensions
+        if data.get('length') and data.get('length') <= 0:
+            raise serializers.ValidationError("Length must be greater than 0")
+        if data.get('width') and data.get('width') <= 0:
+            raise serializers.ValidationError("Width must be greater than 0")
+        if data.get('height') and data.get('height') <= 0:
+            raise serializers.ValidationError("Height must be greater than 0")
+        if data.get('weight') and data.get('weight') <= 0:
+            raise serializers.ValidationError("Weight must be greater than 0")
+        
+        # Validate cost vs selling price
+        if data.get('cost_price') and data.get('price'):
+            if data['cost_price'] > data['price']:
+                raise serializers.ValidationError("Cost price cannot be higher than selling price")
+        
+        return data
+
+# Simplified serializers for list views
+class MaterialTypeListSerializer(serializers.ModelSerializer):
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = MaterialType
+        fields = ['id', 'title_ru', 'title_uz', 'title_eng', 'products_count']
+    
+    def get_products_count(self, obj):
+        return obj.products.count()
+
+class EquipmentTypeListSerializer(serializers.ModelSerializer):
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = EquipmentType
+        fields = ['id', 'title_ru', 'title_uz', 'title_eng', 'is_power_tool', 'requires_certification', 'products_count']
+    
+    def get_products_count(self, obj):
+        return obj.products.count()
+
+class ManufacturerListSerializer(serializers.ModelSerializer):
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Manufacturer
+        fields = ['id', 'name', 'country_ru', 'website', 'products_count']
+    
+    def get_products_count(self, obj):
+        return obj.products.count()
+
+# Product list serializer (lightweight)
+class ProductListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for product lists"""
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
+    manufacturer_name = serializers.CharField(source='manufacturer.name', read_only=True)
+    category_name = serializers.CharField(source='categoty_id.title_ru', read_only=True)
+    material_type_name = serializers.CharField(source='material_type_id.title_ru', read_only=True)
+    
+    class Meta:
+        model = Products
+        fields = [
+            'id', 'title_ru', 'title_uz', 'title_eng', 'price', 'stock',
+            'product_type', 'unit_type', 'is_available', 'is_featured',
+            'is_professional', 'main_image', 'brand_name', 'manufacturer_name',
+            'category_name', 'material_type_name', 'created_at'
+        ]
+
+# Statistics serializers
+class ProductStatsSerializer(serializers.Serializer):
+    """Serializer for product statistics"""
+    total_products = serializers.IntegerField()
+    in_stock_products = serializers.IntegerField()
+    low_stock_products = serializers.IntegerField()
+    professional_products = serializers.IntegerField()
+    featured_products = serializers.IntegerField()
+    total_categories = serializers.IntegerField()
+    total_brands = serializers.IntegerField()
+    total_manufacturers = serializers.IntegerField()
+
+class InventoryReportSerializer(serializers.Serializer):
+    """Serializer for inventory reports"""
+    product_id = serializers.IntegerField()
+    title = serializers.CharField()
+    current_stock = serializers.IntegerField()
+    min_stock_level = serializers.IntegerField()
+    stock_status = serializers.CharField()
+    last_updated = serializers.DateTimeField()
         

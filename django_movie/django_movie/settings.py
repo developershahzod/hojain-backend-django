@@ -13,8 +13,15 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os,sys,datetime
 
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+
+
+
+LOG_DIR = os.path.join(BASE_DIR, 'django_movie', 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)  # 
 
 
 # Quick-start development settings - unsuitable for production
@@ -404,20 +411,12 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
         'console': {
-            'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {

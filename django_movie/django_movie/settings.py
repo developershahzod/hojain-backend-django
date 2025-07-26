@@ -32,7 +32,7 @@ import os
 SECRET_KEY = os.environ.get('SECRET_KEY', 'xgl9fm1xdp0+nopt#!cm7^c)g!t0)0*uag$4ywuemvc^ip98x7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 

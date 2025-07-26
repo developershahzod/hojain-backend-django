@@ -13,3 +13,4 @@ gunicorn
 legacy-cgi
 setuptools
 djangorestframework-jwt
+requests

@@ -12,3 +12,4 @@ redis==3.5.3
 gunicorn
 legacy-cgi
 setuptools
+djangorestframework-jwt

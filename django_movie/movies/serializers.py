@@ -35,25 +35,25 @@ class ProductColorSerializer(serializers.ModelSerializer):
         model = ProductColor
         fields = "__all__"
 
-class ForwhomSeralizer(serializers.ModelSerializer):
-    class Meta:
-        model = Forwhom
-        fields = "__all__"
+# class ForwhomSeralizer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Forwhom
+#         fields = "__all__"
         
 class NotificationTokenSeralizer(serializers.ModelSerializer):
     class Meta:
         model = NotificationToken
         fields = "__all__"
 
-class SkintypeSeralizer(serializers.ModelSerializer):
-    class Meta:
-        model = Skintype
-        fields = "__all__"
+# class SkintypeSeralizer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Skintype
+#         fields = "__all__"
         
-class HairtypeSeralizer(serializers.ModelSerializer):
-    class Meta:
-        model = Hairtype
-        fields = "__all__"
+# class HairtypeSeralizer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Hairtype
+#         fields = "__all__"
 
 
 class BrandSeralizer(serializers.ModelSerializer):
@@ -121,10 +121,10 @@ class ProductBundleDataSerializer(serializers.ModelSerializer):
 class ProductsDataSerializer(serializers.ModelSerializer):
     product_type_id = ProductTypeDataSerializer(read_only=True)
     brand = BrandSeralizer(read_only=True)
-    for_whom_id = ForwhomSeralizer(read_only=True)
+    # for_whom_id = ForwhomSeralizer(read_only=True)
     product_color = ProductColorSerializer(read_only=True)
-    hair_type_id = HairtypeSeralizer(read_only=True)
-    skin_type_id = SkintypeSeralizer(read_only=True)
+    # hair_type_id = HairtypeSeralizer(read_only=True)
+    # skin_type_id = SkintypeSeralizer(read_only=True)
     reviews = ReviewSeralizer(many=True, read_only=True) 
     product_bundle_id = ProductBundleDataSerializer(read_only=True) 
     class Meta:

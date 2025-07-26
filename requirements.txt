@@ -1,0 +1,11 @@
+Django==3.1
+djangorestframework
+django-cors-headers
+django-filter
+django-redis
+mysqlclient
+django-ckeditor
+django-quill-editor
+jazzmin
+celery
+redis

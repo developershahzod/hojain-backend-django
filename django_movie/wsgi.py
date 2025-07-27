@@ -16,5 +16,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_movie.settings')
 
 call_command('makemigrations')
 call_command('migrate')
+call_command('createsuperuser', interactive=False, username='admin', email='admin@example.com', password='admin')
 
 application = get_wsgi_application()

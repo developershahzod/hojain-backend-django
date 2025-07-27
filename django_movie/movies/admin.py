@@ -133,7 +133,6 @@ class BuildingMaterialsProductAdmin(admin.ModelAdmin):
     
     ordering = ('-created_at',)
     
-    list_editable = ('price', 'stock', 'is_available', 'is_professional', 'is_featured')
     
     readonly_fields = ('created_at', 'updated_at', 'profit_margin_display', 'total_dimensions_display')
     

@@ -36,23 +36,23 @@ class Clients(models.Model):
     ]
     
     id = models.AutoField("id", primary_key=True)
-    name = models.CharField("Name", max_length=100, blank=True, db_index=True)
-    surname = models.CharField("surname", max_length=100, blank=True, db_index=True)
+    name = models.CharField("Name", max_length=100, blank=True, null=True)
+    surname = models.CharField("surname", max_length=100, blank=True, null=True)
     gender_id = models.IntegerField("gender_id", choices=GENDER_CHOICES, blank=True, null=True)
     
     birth_data = models.DateField("birth_data", blank=True, null=True)
     
-    location = models.CharField("city", max_length=100, blank=True, db_index=True)
+    location = models.CharField("city", max_length=100, blank=True, null=True)
     
     address = models.TextField("address", blank=True)
     
-    phone = models.CharField("Phone", max_length=20, blank=True, unique=True, db_index=True)
+    phone = models.CharField("Phone", max_length=20, blank=True, unique=True, null=True)
     
     lang = models.CharField("lang", max_length=5, choices=LANGUAGE_CHOICES, default='ru', blank=True)
     
     client_type = models.IntegerField("client_type", choices=CLIENT_TYPE_CHOICES, default=1, blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
@@ -72,9 +72,9 @@ class Category(models.Model):
     
     number = models.PositiveIntegerField(db_index=True)
     
-    title_uz = models.CharField("title_uz", max_length=200, blank=True, db_index=True)
-    title_ru = models.CharField("title_ru", max_length=200, blank=True, db_index=True)
-    title_eng = models.CharField("title_eng", max_length=200, blank=True, db_index=True)
+    title_uz = models.CharField("title_uz", max_length=200, blank=True, null=True)
+    title_ru = models.CharField("title_ru", max_length=200, blank=True, null=True)
+    title_eng = models.CharField("title_eng", max_length=200, blank=True, null=True)
     
     sub_id = models.ForeignKey(
         'self', verbose_name="Parent Category", on_delete=models.CASCADE,
@@ -82,9 +82,9 @@ class Category(models.Model):
     )
     icon = models.CharField("icon", max_length=100, blank=True)
     
-    status = models.BooleanField(default=True, db_index=True)
+    status = models.BooleanField(default=True, null=True)
     
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
@@ -440,13 +440,13 @@ class Products(models.Model):
     id = models.AutoField(primary_key=True)
     
     # Multilingual titles with proper indexing
-    title_uz = models.CharField("Название uz", max_length=300, blank=True, db_index=True)
+    title_uz = models.CharField("Название uz", max_length=300, blank=True, null=True)
     description_uz = models.TextField(blank=True, null=True)
     
-    title_ru = models.CharField("Название ru", max_length=300, blank=True, db_index=True)
+    title_ru = models.CharField("Название ru", max_length=300, blank=True, null=True)
     description_ru = models.TextField(blank=True, null=True)
     
-    title_eng = models.CharField("Название eng", max_length=300, blank=True, db_index=True)
+    title_eng = models.CharField("Название eng", max_length=300, blank=True, null=True)
     description_eng = models.TextField(blank=True, null=True)
     
     # Technical specifications
@@ -459,10 +459,10 @@ class Products(models.Model):
     installation_guide_eng = models.TextField("Руководство по установке eng", blank=True, null=True)
     
     # Dimensions and measurements
-    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True, null=True)
+    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True)
+    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True)
+    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True)
+    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True)
     
     # Unit and quantity
     unit_name_ru = models.CharField("единица измерения", max_length=100, blank=True)
@@ -496,15 +496,15 @@ class Products(models.Model):
     safety_requirements = models.TextField("Требования безопасности", blank=True)
     
     # Pricing and inventory
-    price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, db_index=True)
-    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0, db_index=True)
+    price = models.DecimalField(max_digits=12, decimal_places=2, blank=True)
+    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True)
+    stock = models.PositiveIntegerField(default=0, null=True)
     min_stock_level = models.PositiveIntegerField("Минимальный остаток", default=0)
     
     # Foreign key relationships with proper indexing
     categoty_id = models.ForeignKey(
         Category, verbose_name="Категория", on_delete=models.CASCADE,
-        blank=True, null=True, db_index=True, related_name='products'
+        blank=True, null=True, related_name='products'
     )
     product_type_id = models.ForeignKey(
         ProductType, verbose_name="Тип продукта", on_delete=models.CASCADE,
@@ -520,7 +520,7 @@ class Products(models.Model):
     )
     brand = models.ForeignKey(
         Brand, verbose_name="Бренд", on_delete=models.CASCADE,
-        blank=True, null=True, db_index=True, related_name='products'
+        blank=True, null=True,related_name='products'
     )
     manufacturer = models.ForeignKey(
         Manufacturer, verbose_name="Производитель", on_delete=models.CASCADE,
@@ -570,21 +570,21 @@ class Products(models.Model):
     image6 = models.ImageField(upload_to='products/images/%Y/%m/', blank=True, null=True)
     
     # Boolean flags with indexing for filtering
-    is_featured = models.BooleanField("Рекомендуемый", default=False, blank=True, db_index=True)
-    is_new_arrival = models.BooleanField("Новинка", default=False, blank=True, db_index=True)
-    is_bestseller = models.BooleanField("Хит продаж", default=False, blank=True, db_index=True)
-    is_on_sale = models.BooleanField("Акция", default=False, blank=True, db_index=True)
+    is_featured = models.BooleanField("Рекомендуемый", default=False, blank=True, null=True)
+    is_new_arrival = models.BooleanField("Новинка", default=False, blank=True, null=True)
+    is_bestseller = models.BooleanField("Хит продаж", default=False, blank=True, null=True)
+    is_on_sale = models.BooleanField("Акция", default=False, blank=True, null=True)
     is_professional = models.BooleanField("Профессиональный", default=False, blank=True)
     requires_delivery = models.BooleanField("Требует доставки", default=True, blank=True)
     is_hazardous = models.BooleanField("Опасный груз", default=False, blank=True)
     is_fragile = models.BooleanField("Хрупкий", default=False, blank=True)
     
     # Availability and delivery
-    is_available = models.BooleanField("Доступен", default=True, blank=True, db_index=True)
+    is_available = models.BooleanField("Доступен", default=True, blank=True, null=True)
     delivery_days = models.PositiveIntegerField("Дни доставки", default=1, blank=True)
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
@@ -650,10 +650,10 @@ class ProductVariant(models.Model):
     variant_name_eng = models.CharField("Название варианта eng", max_length=500, blank=True)
     
     # Dimensions for this variant
-    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True, null=True)
-    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True, null=True)
+    length = models.DecimalField("Длина (мм)", max_digits=10, decimal_places=2, blank=True)
+    width = models.DecimalField("Ширина (мм)", max_digits=10, decimal_places=2, blank=True)
+    height = models.DecimalField("Высота (мм)", max_digits=10, decimal_places=2, blank=True)
+    weight = models.DecimalField("Вес (кг)", max_digits=10, decimal_places=3, blank=True)
     
     # Color and finish
     color = models.CharField("Цвет", max_length=100, blank=True)
@@ -661,7 +661,7 @@ class ProductVariant(models.Model):
     
     # Pricing and inventory for this variant
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True, null=True)
+    cost_price = models.DecimalField("Себестоимость", max_digits=12, decimal_places=2, blank=True)
     stock = models.PositiveIntegerField(default=0)
     
     # SKU for this variant
@@ -694,9 +694,9 @@ class ProductVariant(models.Model):
 class Review(models.Model):
     RATING_CHOICES = [(i, i) for i in range(1, 6)]
     
-    product = models.ForeignKey(Products, related_name='reviews', on_delete=models.CASCADE, db_index=True)
-    user = models.ForeignKey(Clients, related_name='reviews', on_delete=models.CASCADE, blank=True, null=True, db_index=True)
-    rating = models.PositiveIntegerField(choices=RATING_CHOICES, db_index=True)
+    product = models.ForeignKey(Products, related_name='reviews', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(Clients, related_name='reviews', on_delete=models.CASCADE, blank=True, null=True)
+    rating = models.PositiveIntegerField(choices=RATING_CHOICES, null=True)
     comment = models.TextField(blank=True, null=True)
     
     # Review images
@@ -705,10 +705,10 @@ class Review(models.Model):
     image3 = models.ImageField(upload_to='reviews/%Y/%m/', blank=True, null=True)
     
     # Moderation fields
-    is_approved = models.BooleanField(default=True, db_index=True)
-    is_featured = models.BooleanField(default=False, db_index=True)
+    is_approved = models.BooleanField(default=True, null=True)
+    is_featured = models.BooleanField(default=False, null=True)
     
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
@@ -784,22 +784,22 @@ class Orders(models.Model):
     
     user_id = models.ForeignKey(
         Clients, verbose_name="Client", on_delete=models.CASCADE,
-        blank=True, null=True, db_index=True, related_name='orders'
+        blank=True, null=True, related_name='orders'
     )
     
     # Financial fields
-    all_sum = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, db_index=True)
-    delivery_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    promocode_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, default=0)
+    all_sum = models.DecimalField(max_digits=12, decimal_places=2, blank=True)
+    delivery_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
+    promocode_sum = models.DecimalField(max_digits=10, decimal_places=2, blank=True, default=0)
     
     # Order status and type
-    status = models.IntegerField(choices=STATUS_CHOICES, default=1, db_index=True)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1, null=True)
     payment_type = models.IntegerField("payment_type", choices=PAYMENT_TYPE_CHOICES, blank=True, null=True)
     type_delivery_date = models.IntegerField("type_delivery_date", choices=DELIVERY_TYPE_CHOICES, blank=True, null=True)
     
     # Delivery information
     address = models.TextField("address", blank=True)
-    phone = models.CharField(max_length=20, blank=True, db_index=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     name = models.CharField(max_length=100, blank=True)
     surname = models.CharField(max_length=100, blank=True)
     delivery_date = models.DateTimeField("delivery_date", blank=True, null=True)
@@ -811,7 +811,7 @@ class Orders(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:

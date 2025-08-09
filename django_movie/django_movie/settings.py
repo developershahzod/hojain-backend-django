@@ -13,23 +13,15 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os,sys,datetime
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
-
-
-
-LOG_DIR = os.path.join(BASE_DIR, 'django_movie', 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)  # 
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-import os
-SECRET_KEY = os.environ.get('SECRET_KEY', 'xgl9fm1xdp0+nopt#!cm7^c)g!t0)0*uag$4ywuemvc^ip98x7')
+SECRET_KEY = 'xgl9fm1xdp0+nopt#!cm7^c)g!t0)0*uag$4ywuemvc^ip98x7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,13 +51,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'django_movie.urls'
@@ -94,30 +86,16 @@ WSGI_APPLICATION = 'django_movie.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': os.environ.get('DB_NAME', 'develosh_osma'),
-#         'USER': os.environ.get('DB_USER', 'develosh_osma'),
-#         'PASSWORD': os.environ.get('DB_PASSWORD', 'Shaha2001'),
-#         'HOST': os.environ.get('DB_HOST', ''),
-#         'PORT': os.environ.get('DB_PORT', ''),
-#         'OPTIONS': {
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-#             'charset': 'utf8mb4',
-#         },
-#         'CONN_MAX_AGE': 60,  # Connection pooling
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # or a path to your SQLite file
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db_hojain',   
+        'USER': 'db_hojain',     
+        'PASSWORD': 'Shaha2001',    
+        'HOST': 'localhost',           
+        'PORT': '5432',                
     }
 }
-
 
 
 # Password validation
@@ -172,17 +150,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [STATIC_DIR]
 
-# Static files optimization
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-]
 
-MEDIA_URL = '/media/'
+MEDIA_URL = 'django_movie/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 JAZZMIN_UI_TWEAKS = {
@@ -190,74 +162,48 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Строительные материалы и оборудование",
-    "site_header": "Админ панель магазина стройматериалов",
-    "site_brand": "СтройМаркет",
-    "welcome_sign": "Добро пожаловать в админ панель магазина строительных материалов",
-    
     "order_with_respect_to": [
-        "movies.Products",
-        "movies.ProductVariant",
-        "movies.Category",
-        "movies.Brand",
-        "movies.Manufacturer",
-        "movies.MaterialType",
-        "movies.MaterialGrade",
-        "movies.EquipmentType",
-        "movies.TechnicalStandard",
-        "movies.UnitOfMeasure",
-        "movies.ApplicationArea",
-        
-        "movies.Actual",
-        "movies.Stories",
-        "movies.Slider",
-        
-        "movies.MainPage",
-        "movies.New",
+    "movies.Products",
+    "movies.Brand",
+    "movies.Category",
+    
+    
 
-        "movies.TopTypes",
-        "movies.Clients",
-        "movies.Orders",
-        "movies.OrderProduct",
+    
+    "movies.Actual",
+    "movies.Stories",
+    "movies.Slider",
+    
+    "movies.MainPage",
+    "movies.New",
+
+
+    "movies.TopTypes",
+    "movies.Clients",
+    "movies.Orders",
+    
     ],
     
     "icons": {
-        "movies.Products": "fas fa-hammer",
-        "movies.ProductVariant": "fas fa-layer-group",
-        "movies.Brand": "fas fa-award",
-        "movies.Manufacturer": "fas fa-industry",
-        "movies.Category": "fas fa-th-large",
-        "movies.MaterialType": "fas fa-cubes",
-        "movies.MaterialGrade": "fas fa-star",
-        "movies.EquipmentType": "fas fa-tools",
-        "movies.TechnicalStandard": "fas fa-certificate",
-        "movies.UnitOfMeasure": "fas fa-ruler",
-        "movies.ApplicationArea": "fas fa-map-marked-alt",
+        "movies.Products": "fas fa-box",
+        "movies.Brand": "fab fa-adversal",
+        "movies.Category": "fas fa-boxes",
         
         "movies.Actual": "fab fa-instagram",
         "movies.Stories": "fab fa-instagram",
         "movies.Slider": "far fa-images",
         
         "movies.MainPage": "fab fa-pagelines",
-        "movies.New": "fas fa-newspaper",
+        "movies.New": "fas fa-pager",
         
         "movies.TopTypes": "fas fa-level-up-alt",
         
+        
         "movies.Clients": "fas fa-users",
         "movies.Orders": "fas fa-shopping-cart",
-        "movies.OrderProduct": "fas fa-list",
-        "movies.Review": "fas fa-star",
       
         "auth.User": "fas fa-user",
         "auth.Group": "fas fa-users-cog",
-    },
-    
-    "custom_links": {
-        "movies": [{
-            "name": "Отчеты по продажам",
-            "url": "admin:movies_orders_changelist",
-            "icon": "fas fa-chart-line",
-        }]
     },
 }
 
@@ -329,63 +275,8 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-# Caching Configuration
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#         'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         },
-#         'KEY_PREFIX': 'osma_app',
-#         'TIMEOUT': 300,  # 5 minutes default timeout
-#     }
-# }
-
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust the Redis server URL and DB number as needed
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-
-# Celery Configuration
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-
-# Session Configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# Security Settings
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
-
-# CORS Settings
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
-CORS_ALLOW_CREDENTIALS = True
-
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': (
@@ -393,61 +284,4 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour'
-    }
 }
-
-# Logging Configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,  # Important to keep existing loggers enabled
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} {name} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],  # Only console handler here
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-}
-
-
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@osmaapp.com')
-
-# File Upload Settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
-
-# Performance Settings
-USE_TZ = True
-USE_I18N = True
-USE_L10N = True

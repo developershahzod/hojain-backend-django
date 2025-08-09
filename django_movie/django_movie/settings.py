@@ -87,13 +87,13 @@ WSGI_APPLICATION = 'django_movie.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+   'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_hojain',   
-        'USER': 'db_hojain',     
-        'PASSWORD': 'Shaha2001',    
-        'HOST': 'localhost',           
-        'PORT': '5432',                
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
